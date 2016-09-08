@@ -92,8 +92,7 @@ static void *func(void *arg)
         timeout.tv_sec  = 0;
         timeout.tv_usec = 1000;
 
-        int reval = select(c->sfd+1, &fd_recv, NULL, NULL, &timeout);
-        int err = 0;
+        int reval = Select(c->sfd+1, &fd_recv, NULL, NULL, &timeout);
         if(reval > 0 && FD_ISSET(c->sfd, &fd_recv))
         {
             pthread_mutex_lock(&mutex);
@@ -117,12 +116,6 @@ static void *func(void *arg)
             pthread_mutex_unlock(&mutex);
 
         }
-        else if(reval == -1)
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
-        
     }
 }
 
