@@ -69,6 +69,9 @@ static void do_clean()
 //信号处理函数
 static void handler(int arg)
 {
+    const char *msg = "服务器将在五秒后关闭..."
+    broadcast(-1, msg, strlen(msg)+1);
+    sleep(5);
     exit(EXIT_SUCCESS);
 }
 
@@ -93,7 +96,6 @@ static void *func(void *arg)
         timeout.tv_usec = 1000;
 
         int reval = select(c->sfd+1, &fd_recv, NULL, NULL, &timeout);
-        int err = 0;
         if(reval > 0 && FD_ISSET(c->sfd, &fd_recv))
         {
             pthread_mutex_lock(&mutex);
@@ -139,13 +141,39 @@ int main()
     atexit(do_clean);
     listInit(&clients);     //初始化链表
     createTcpSocket(&fd, PORT, MAX_LISTENED);
+    /*fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(fd < 0)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+    memset(&serv_addr, 0, sizeof(SA));
+    serv_addr.sin_family     = AF_INET;
+    serv_addr.sin_port       = htons(PORT);
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if(bind(fd, (SA *)&serv_addr, sizeof(SI)) == -1)
+   {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+    if(listen(fd, MAX_LISTENED) == -1)
+     {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }*/
 
     //监听并生成客户端列表
     while(true)
     {
         socklen_t slen = sizeof(SI);
         memset(&clit_addr, 0, sizeof(SI));
-        cfd = Accept(fd, (SA *)&clit_addr, &slen);
+        cfd = accept(fd, (SA *)&clit_addr, &slen);
+        if(cfd == -1)
+        {
+            perror("bind");
+            exit(EXIT_FAILURE);
+        }
        if(clients.lt_len == MAX_LISTENED)
        {
            write(cfd, warning, strlen(warning)+1);
